@@ -18,16 +18,6 @@ trait SentimentOutput {
 
 trait AnsiConsoleSentimentOutput extends SentimentOutput {
 
-  case class AnsiString(ansiText: String, realLength: Int) {
-    def +(that: AnsiString) = AnsiString(ansiText + that.ansiText, realLength + that.realLength)
-    def +(that: String)     = AnsiString(ansiText + that, realLength + that.length)
-    override def toString = ansiText
-  }
-  object AnsiString {
-    def apply(text: String): AnsiString = AnsiString(text, text.length)
-    def zero = apply("")
-  }
-
   object AnsiControls {
     val Reset        = "\u001B[0m"
     val EraseDisplay = "\033[2J\033[;H"
