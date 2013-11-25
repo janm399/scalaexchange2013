@@ -4,10 +4,6 @@ import akka.actor.{Props, ActorSystem}
 import scala.annotation.tailrec
 import spray.can.Http
 import akka.io.IO
-import spray.http._
-import scala.Some
-import spray.http.HttpRequest
-import scala.Some
 
 object Main extends App {
   import Commands._
@@ -17,12 +13,12 @@ object Main extends App {
 
   implicit lazy val system = ActorSystem()
   lazy val io = IO(Http)
-  val scan = system.actorOf(Props(new RealTweetScannerActor(io)))
-  implicit val _ = actor(new Act {
+  implicit val printer = actor(new Act {
     become {
       case x => println(">>> " + x)
     }
   })
+  val scan = system.actorOf(Props(new TweetStreamerActor(io, TweetStreamerActor.twitterUri, printer)))
 
   @tailrec
   private def commandLoop(): Unit = {

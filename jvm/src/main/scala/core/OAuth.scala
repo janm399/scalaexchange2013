@@ -13,12 +13,13 @@ object OAuth {
   case class Token(value: String, secret: String)
 
   /**
-   *
-   * @param consumer
-   * @param token
-   * @return
+   * Constructs an operation that can authorise ``HttpRequest``s using OAuth.
+   * 
+   * @param consumer the OAuth consumer details
+   * @param token the OAuth token details
+   * @return the ``HttpRequest`` transformer
    */
-  def sign(consumer: Consumer, token: Token): HttpRequest => HttpRequest = {
+  def oAuthAuthorizer(consumer: Consumer, token: Token): HttpRequest => HttpRequest = {
     // construct the key and cryptographic entity
     val SHA1 = "HmacSHA1"
     val keyString = percentEncode(consumer.secret :: token.secret :: Nil)

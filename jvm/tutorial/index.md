@@ -489,7 +489,7 @@ class TwitterApi private(system: ActorSystem, port: Int, body: String) {
 object TwitterApi {
 
   def apply(port: Int)(implicit system: ActorSystem): TwitterApi = {
-    val body = Source.fromInputStream(getClass.getResourceAsStream("/tweets.json")).mkString
+    val body = Source.fromInputStream(getClass.getResourceAsStream("/tweet.json")).mkString
     new TwitterApi(system, port, body)
   }
 

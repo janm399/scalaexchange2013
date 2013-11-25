@@ -8,6 +8,7 @@ import spray.http.HttpResponse
 import akka.routing.RoundRobinRouter
 import akka.io.IO
 import scala.io.Source
+import spray.can.server.ServerSettings
 
 class TwitterApi private(system: ActorSystem, port: Int, body: String) {
 
@@ -20,10 +21,10 @@ class TwitterApi private(system: ActorSystem, port: Int, body: String) {
     def receive: Receive = {
       case _: Http.Connected =>
         sender ! Http.Register(self)
-      case HttpRequest(HttpMethods.GET, _, _, _, _) =>
-
-        sender ! HttpResponse(entity = HttpEntity(body))
-      case _ =>
+      case HttpRequest(HttpMethods.POST, _, _, _, _) =>
+        sender ! ChunkedResponseStart(HttpResponse(StatusCodes.OK))
+        sender ! MessageChunk(body = body)
+        sender ! ChunkedMessageEnd()
     }
   }
 
@@ -41,7 +42,7 @@ class TwitterApi private(system: ActorSystem, port: Int, body: String) {
 object TwitterApi {
 
   def apply(port: Int)(implicit system: ActorSystem): TwitterApi = {
-    val body = Source.fromInputStream(getClass.getResourceAsStream("/tweets.json")).mkString
+    val body = Source.fromInputStream(getClass.getResourceAsStream("/tweet.json")).mkString
     new TwitterApi(system, port, body)
   }
 

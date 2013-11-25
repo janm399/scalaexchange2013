@@ -3,26 +3,25 @@ package core
 import akka.actor.ActorSystem
 import org.specs2.mutable.SpecificationLike
 import akka.testkit.{TestActorRef, TestKit, ImplicitSender}
-import domain.Tweet
+import domain.{Text, Tweet}
+import spray.http.Uri
+import spray.can.Http
+import akka.io.IO
 
-class TweetScannerActorSpec extends TestKit(ActorSystem())
-  with SpecificationLike with ImplicitSender {
-
+class TweetScannerActorSpec extends TestKit(ActorSystem()) with SpecificationLike with ImplicitSender {
   sequential
 
   val port = 12345
-  def testQueryUrl(query: String) = s"http://localhost:$port/q=$query"
-
-  val tweetScan  = TestActorRef(new TweetScannerActor(testActor, testQueryUrl))
+  val tweetStream = TestActorRef(new TweetStreamerActor(IO(Http), Uri(s"http://localhost:$port/"), testActor))
 
   "Getting all 'typesafe' tweets" >> {
 
-    "should return more than 10 last entries" in {
+    "should receive the tweets" in {
       val twitterApi = TwitterApi(port)
-      tweetScan ! "typesafe"
+      tweetStream ! "typesafe"
       Thread.sleep(1000)
-      val tweets = expectMsgType[List[Tweet]]
-      tweets.size mustEqual 4
+      val tweet = expectMsgType[Tweet]
+      tweet.text mustEqual Text("Aggressive Ponytail #freebandnames")
       twitterApi.stop()
       success
     }
