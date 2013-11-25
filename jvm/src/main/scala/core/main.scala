@@ -1,0 +1,46 @@
+package core
+
+import akka.actor.{Props, ActorSystem}
+import scala.annotation.tailrec
+import spray.can.Http
+import akka.io.IO
+import domain.{User, Tweet}
+import java.util.Date
+
+// run with -javaagent:$HOME/.m2/repository/org/aspectj/aspectjweaver/1.7.3/aspectjweaver-1.7.3.jar
+// in my case -javaagent:/Users/janmachacek/.m2/repository/org/aspectj/aspectjweaver/1.7.3/aspectjweaver-1.7.3.jar
+object Main extends App {
+  import Commands._
+  import akka.actor.ActorDSL._
+
+  implicit lazy val system = ActorSystem()
+  lazy val io = IO(Http)
+  val sentiment = system.actorOf(Props(new SentimentAnalysisActor with CSVLoadedSentimentSets with AnsiConsoleSentimentOutput))
+  val scan = system.actorOf(Props(new TweetStreamerActor(io, TweetStreamerActor.twitterUri, sentiment) with OAuthTwitterAuthorization))
+
+  @tailrec
+  private def commandLoop(): Unit = {
+    Console.readLine() match {
+      case QuitCommand          => return
+      case StreamCommand(query) => scan ! query
+      case _                    => println("WTF??!!")
+    }
+
+    commandLoop()
+  }
+
+  // start processing the commands
+  commandLoop()
+
+  system.shutdown()
+}
+
+/**
+ * Various regexes for the ``Shell`` to use
+ */
+object Commands {
+
+  val QuitCommand   = "quit"
+  val StreamCommand = "stream (.*)".r
+
+}
