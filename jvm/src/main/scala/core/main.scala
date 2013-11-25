@@ -16,13 +16,13 @@ object Main extends App {
   implicit lazy val system = ActorSystem()
   lazy val io = IO(Http)
   val sentiment = system.actorOf(Props(new SentimentAnalysisActor with CSVLoadedSentimentSets with AnsiConsoleSentimentOutput))
-  val scan = system.actorOf(Props(new TweetStreamerActor(io, TweetStreamerActor.twitterUri, sentiment) with OAuthTwitterAuthorization))
+  val stream = system.actorOf(Props(new TweetStreamerActor(io, TweetStreamerActor.twitterUri, sentiment) with OAuthTwitterAuthorization))
 
   @tailrec
   private def commandLoop(): Unit = {
     Console.readLine() match {
       case QuitCommand          => return
-      case StreamCommand(query) => scan ! query
+      case StreamCommand(query) => stream ! query
       case _                    => println("WTF??!!")
     }
 
