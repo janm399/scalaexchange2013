@@ -18,10 +18,22 @@ trait SentimentOutput {
 
 trait AnsiConsoleSentimentOutput extends SentimentOutput {
 
+  case class AnsiString(ansiText: String, realLength: Int) {
+    def +(that: AnsiString) = AnsiString(ansiText + that.ansiText, realLength + that.realLength)
+    def +(that: String)     = AnsiString(ansiText + that, realLength + that.length)
+    override def toString = ansiText
+  }
+  object AnsiString {
+    def apply(text: String): AnsiString = AnsiString(text, text.length)
+    def zero = apply("")
+  }
+
   object AnsiControls {
-    val Reset  = "\u001B[0m"
-    val Clear  = "\033[2J\033[;H"
-    val Bold   = "\u001B[1m"
+    val Reset     = "\u001B[0m"
+    val ClearAll  = "\033[2J\033[;H"
+    val ClearFrom = "\033[1J\033[;H"
+    val Bold      = "\u001B[1m"
+    def goto(x: Int, y: Int): String = "\u001B[%d;%df" format (y, x)
   }
 
   object AnsiColors {
@@ -40,8 +52,10 @@ trait AnsiConsoleSentimentOutput extends SentimentOutput {
   val categoryPadding = 30
   val consoleWidth = 80
 
+  println(AnsiControls.ClearAll)
+
   def outputCount(allValues: List[Iterable[(Category, Int)]]): Unit = {
-    print(AnsiControls.Clear)
+    print(AnsiControls.ClearAll)
     allValues.foreach { values =>
       values.zipWithIndex.foreach {
         case ((k, v), i) =>

@@ -11,6 +11,7 @@ import scala.Some
 import domain.{User, Tweet}
 import scala.io.Source
 import akka.actor.SupervisorStrategy.Restart
+import scala.util.Try
 
 trait TwitterAuthorization {
   def authorize: HttpRequest => HttpRequest
@@ -42,17 +43,19 @@ trait TweetMarshaller {
     }
 
     def apply(entity: HttpEntity): Deserialized[Tweet] = {
-      val json = JsonParser(entity.asString).asJsObject
+      Try {
+        val json = JsonParser(entity.asString).asJsObject
 
-      (json.fields.get("id_str"), json.fields.get("text"), json.fields.get("created_at"), json.fields.get("user")) match {
-        case (Some(JsString(id)), Some(JsString(text)), Some(JsString(createdAt)), Some(user: JsObject)) =>
-          mkUser(user) match {
-            case Right(user) => Right(Tweet(id, user, text, dateFormat.parse(createdAt)))
-            case Left(msg)   => Left(msg)
-          }
-        case _ => Left(MalformedContent("bad tweet"))
+        (json.fields.get("id_str"), json.fields.get("text"), json.fields.get("created_at"), json.fields.get("user")) match {
+          case (Some(JsString(id)), Some(JsString(text)), Some(JsString(createdAt)), Some(user: JsObject)) =>
+            mkUser(user) match {
+              case Right(user) => Right(Tweet(id, user, text, dateFormat.parse(createdAt)))
+              case Left(msg)   => Left(msg)
+            }
+          case _ => Left(MalformedContent("bad tweet"))
+        }
       }
-    }
+    }.getOrElse(Left(MalformedContent("bad json")))
   }
 
 }
@@ -68,8 +71,6 @@ class TweetStreamerActor(io: ActorRef, uri: Uri, processor: ActorRef) extends Ac
     case _ => Restart
   }
 
-  val tweetUnmarshaller = unmarshal[Tweet]
-
   def receive: Receive = {
     case query: String =>
       val post = HttpEntity(ContentType(MediaTypes.`application/x-www-form-urlencoded`), s"track=$query")
@@ -77,8 +78,10 @@ class TweetStreamerActor(io: ActorRef, uri: Uri, processor: ActorRef) extends Ac
       sendTo(io).withResponsesReceivedBy(self)(rq)
     case ChunkedResponseStart(_) =>
     case MessageChunk(entity, _) =>
-      val tweet = tweetUnmarshaller(HttpResponse(entity = entity))
-      processor ! tweet
+      TweetUnmarshaller(entity) match {
+        case Right(tweet) => processor ! tweet
+        case _            =>
+      }
     case _ =>
   }
 

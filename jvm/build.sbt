@@ -39,3 +39,5 @@ javaOptions in run += "-javaagent:" + System.getProperty("user.home") + "/.ivy2/
 fork in run := true
 
 connectInput in run := true
+
+outputStrategy in run := Some(StdoutOutput)
