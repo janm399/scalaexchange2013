@@ -33,3 +33,5 @@ scalacOptions ++= Seq(
 )
 
 parallelExecution in Test := false
+
+javaOptions in run += "-javaagent:" + System.getProperty("user.home") + "/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.7.3.jar"
