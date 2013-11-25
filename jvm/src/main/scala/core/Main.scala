@@ -11,8 +11,6 @@ object Main extends App {
   import Commands._
   import akka.actor.ActorDSL._
 
-  def twitterSearchProxy(query: String) = s"http://twitter-search-proxy.herokuapp.com/search/tweets?q=$query"
-
   implicit lazy val system = ActorSystem()
   lazy val io = IO(Http)
   val sentiment = system.actorOf(Props(new SentimentAnalysisActor with CSVLoadedSentimentSets with AnsiConsoleSentimentOutput))

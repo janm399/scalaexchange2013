@@ -66,9 +66,7 @@ object OAuth {
       val oauth = TreeMap[String, String]() ++ (oauthParams + ("oauth_signature" -> percentEncode(sig))) map { case (k, v) => "%s=\"%s\"" format (k, v) } mkString ", "
 
       // return the signed request
-      httpRequest.withHeaders(
-        List(RawHeader("Authorization", "OAuth " + oauth))
-      ).withEntity(newEntity)
+      httpRequest.withHeaders(List(RawHeader("Authorization", "OAuth " + oauth))).withEntity(newEntity)
     }
   }
 
