@@ -29,10 +29,10 @@ trait AnsiConsoleSentimentOutput extends SentimentOutput {
   }
 
   object AnsiControls {
-    val Reset     = "\u001B[0m"
-    val ClearAll  = "\033[2J\033[;H"
-    val ClearFrom = "\033[1J\033[;H"
-    val Bold      = "\u001B[1m"
+    val Reset        = "\u001B[0m"
+    val EraseDisplay = "\033[2J\033[;H"
+    val EraseLine    = "\033[2K\033[;H"
+    val Bold         = "\u001B[1m"
     def goto(x: Int, y: Int): String = "\u001B[%d;%df" format (y, x)
   }
 
@@ -52,10 +52,10 @@ trait AnsiConsoleSentimentOutput extends SentimentOutput {
   val categoryPadding = 30
   val consoleWidth = 80
 
-  println(AnsiControls.ClearAll)
+  println(AnsiControls.EraseDisplay)
 
   def outputCount(allValues: List[Iterable[(Category, Int)]]): Unit = {
-    print(AnsiControls.ClearAll)
+    print(AnsiControls.EraseDisplay)
     allValues.foreach { values =>
       values.zipWithIndex.foreach {
         case ((k, v), i) =>
@@ -98,8 +98,8 @@ class SentimentAnalysisActor extends Actor {
 
   def receive: Receive = {
     case tweet: Tweet =>
-      val positive: Int = if (positiveWords.exists(word => tweet.text contains word)) 1 else 0
-      val negative: Int = if (negativeWords.exists(word => tweet.text contains word)) 1 else 0
+      val positive: Int = if (positiveWords.exists(word => tweet.text.toLowerCase contains word)) 1 else 0
+      val negative: Int = if (negativeWords.exists(word => tweet.text.toLowerCase contains word)) 1 else 0
 
       updateCounts("positive", positive)
       updateCounts("negative", negative)
