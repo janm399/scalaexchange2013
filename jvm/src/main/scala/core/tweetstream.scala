@@ -5,11 +5,12 @@ import spray.http._
 import spray.json._
 import spray.client.pipelining._
 import java.text.SimpleDateFormat
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{OneForOneStrategy, SupervisorStrategy, ActorRef, Actor}
 import spray.http.HttpRequest
 import scala.Some
 import domain.{User, Tweet}
 import scala.io.Source
+import akka.actor.SupervisorStrategy.Restart
 
 trait TwitterAuthorization {
   def authorize: HttpRequest => HttpRequest
@@ -62,6 +63,10 @@ object TweetStreamerActor {
 
 class TweetStreamerActor(io: ActorRef, uri: Uri, processor: ActorRef) extends Actor with TweetMarshaller {
   this: TwitterAuthorization =>
+
+  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
+    case _ => Restart
+  }
 
   val tweetUnmarshaller = unmarshal[Tweet]
 
