@@ -9,6 +9,22 @@ import akka.actor.{ActorRef, Actor}
 import spray.http.HttpRequest
 import scala.Some
 import domain.{User, Tweet}
+import scala.io.Source
+
+trait TwitterAuthorization {
+  def authorize: HttpRequest => HttpRequest
+}
+
+trait OAuthTwitterAuthorization extends TwitterAuthorization {
+  import OAuth._
+  val home = System.getProperty("user.home")
+  val lines = Source.fromFile(s"$home/.twitter/scalaexchange2013").getLines().toList
+
+  val consumer = Consumer(lines(0), lines(1))
+  val token = Token(lines(2), lines(3))
+
+  val authorize: (HttpRequest) => HttpRequest = oAuthAuthorizer(consumer, token)
+}
 
 trait TweetMarshaller {
 
@@ -45,16 +61,14 @@ object TweetStreamerActor {
 }
 
 class TweetStreamerActor(io: ActorRef, uri: Uri, processor: ActorRef) extends Actor with TweetMarshaller {
-  import OAuth._
+  this: TwitterAuthorization =>
 
-  val oAuthAuthorize = oAuthAuthorizer(Consumer("hVdsWmYtTW4TnaUPVzqkA", "63Ir9LQVFV7CA0Oj69hs0Xvew6o88WWvXMN1qK6C0"),
-    Token("29976216-JP2lKH1CKzQ7G467dGh0TJ9WeGUjmnWQvZ5GwnBR2", "3ILPoYz0hjrFpMo33JxwqbJhfm52fF0qUBTybgUNqrZwD"))
   val tweetUnmarshaller = unmarshal[Tweet]
 
   def receive: Receive = {
     case query: String =>
       val post = HttpEntity(ContentType(MediaTypes.`application/x-www-form-urlencoded`), s"track=$query")
-      val rq = HttpRequest(HttpMethods.POST, uri = uri, entity = post) ~> oAuthAuthorize
+      val rq = HttpRequest(HttpMethods.POST, uri = uri, entity = post) ~> authorize
       sendTo(io).withResponsesReceivedBy(self)(rq)
     case ChunkedResponseStart(_) =>
     case MessageChunk(entity, _) =>

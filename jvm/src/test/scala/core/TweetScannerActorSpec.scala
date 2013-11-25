@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import org.specs2.mutable.SpecificationLike
 import akka.testkit.{TestActorRef, TestKit, ImplicitSender}
 import domain.Tweet
-import spray.http.Uri
+import spray.http.{HttpRequest, Uri}
 import spray.can.Http
 import akka.io.IO
 
@@ -12,7 +12,9 @@ class TweetScannerActorSpec extends TestKit(ActorSystem()) with SpecificationLik
   sequential
 
   val port = 12345
-  val tweetStream = TestActorRef(new TweetStreamerActor(IO(Http), Uri(s"http://localhost:$port/"), testActor))
+  val tweetStream = TestActorRef(new TweetStreamerActor(IO(Http), Uri(s"http://localhost:$port/"), testActor) with TwitterAuthorization {
+    def authorize: (HttpRequest) => HttpRequest = identity
+  })
 
   "Getting all 'typesafe' tweets" >> {
 
