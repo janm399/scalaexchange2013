@@ -4,6 +4,8 @@ import akka.actor.{Props, ActorSystem}
 import scala.annotation.tailrec
 import spray.can.Http
 import akka.io.IO
+import domain.{User, Tweet}
+import java.util.Date
 
 object Main extends App {
   import Commands._
@@ -13,20 +15,17 @@ object Main extends App {
 
   implicit lazy val system = ActorSystem()
   lazy val io = IO(Http)
-  implicit val printer = actor(new Act {
-    become {
-      case x => println(">>> " + x)
-    }
-  })
-  val scan = system.actorOf(Props(new TweetStreamerActor(io, TweetStreamerActor.twitterUri, printer)))
+  val sentiment = system.actorOf(Props(new SentimentAnalysisActor with CSVLoadedSentimentSets with AnsiConsoleSentimentOutput))
+  val scan = system.actorOf(Props(new TweetStreamerActor(io, TweetStreamerActor.twitterUri, sentiment)))
+
+  sentiment ! Tweet("123", User("23", "en", 400), "All is jolly good", new Date())
+  sentiment ! Tweet("123", User("23", "en", 100), "All is jolly good", new Date())
 
   @tailrec
   private def commandLoop(): Unit = {
     Console.readLine() match {
       case QuitCommand                => return
-
       case ScanCommand(query)         => scan ! query
-
       case _                          => println("WTF??!!")
     }
 

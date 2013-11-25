@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat
 import akka.actor.{ActorRef, Actor}
 import spray.http.HttpRequest
 import scala.Some
-import domain.Tweet
+import domain.{User, Tweet}
 
 trait TweetMarshaller {
 
@@ -16,15 +16,24 @@ trait TweetMarshaller {
 
     val dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss Z yyyy")
 
+    def mkUser(user: JsObject): Deserialized[User] = {
+      (user.fields("id_str"), user.fields("lang"), user.fields("followers_count")) match {
+        case (JsString(id), JsString(lang), JsNumber(followers)) => Right(User(id, lang, followers.toInt))
+        case (JsString(id), _, _)                                => Right(User(id, "", 0))
+        case _                                                   => Left(MalformedContent("bad user"))
+      }
+    }
+
     def apply(entity: HttpEntity): Deserialized[Tweet] = {
       val json = JsonParser(entity.asString).asJsObject
+
       (json.fields.get("id_str"), json.fields.get("text"), json.fields.get("created_at"), json.fields.get("user")) match {
-        case (Some(JsString(id)), Some(JsString(text)), Some(JsString(createdAt)), Some(JsObject(user))) =>
-          user.get("id_str") match {
-            case Some(JsString(userId)) => Right(Tweet(id, userId, text, dateFormat.parse(createdAt)))
-            case _                      => Left(MalformedContent("Bad tweet JSON"))
+        case (Some(JsString(id)), Some(JsString(text)), Some(JsString(createdAt)), Some(user: JsObject)) =>
+          mkUser(user) match {
+            case Right(user) => Right(Tweet(id, user, text, dateFormat.parse(createdAt)))
+            case Left(msg)   => Left(msg)
           }
-        case _                          => Left(MalformedContent("Bad status JSON"))
+        case _ => Left(MalformedContent("bad tweet"))
       }
     }
   }
