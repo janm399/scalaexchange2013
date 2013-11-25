@@ -12,10 +12,6 @@ import spray.can.server.ServerSettings
 
 class TwitterApi private(system: ActorSystem, port: Int, body: String) {
 
-  val blackHoleActor = system.actorOf(Props(new Actor {
-    def receive: Receive = Actor.emptyBehavior
-  }))
-
   private class Service extends Actor {
 
     def receive: Receive = {
@@ -30,10 +26,10 @@ class TwitterApi private(system: ActorSystem, port: Int, body: String) {
 
   private val service = system.actorOf(Props(new Service).withRouter(RoundRobinRouter(nrOfInstances = 50)))
   private val io = IO(Http)(system)
-  io.tell(Http.Bind(service, "localhost", port = port), blackHoleActor)
+  io ! Http.Bind(service, "localhost", port = port)
 
   def stop(): Unit = {
-    io.tell(Http.Unbind, blackHoleActor)
+    io ! Http.Unbind
     system.stop(service)
     system.stop(io)
   }

@@ -2,7 +2,7 @@ name := "activator-twitter-stream"
 
 version := "1.0"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.10.2"
 
 resolvers += "spray repo" at "http://repo.spray.io"
 
@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "io.spray"               %% "spray-json"            % "1.2.3",
   "org.eigengo.monitor"     % "agent-akka"            % "0.2-SNAPSHOT",
   "org.eigengo.monitor"     % "output-statsd"         % "0.2-SNAPSHOT",
-  "org.specs2"             %% "specs2"                % "2.3.4"        % "test",
+  "org.specs2"             %% "specs2"                % "2.2.2"        % "test",
   "io.spray"                % "spray-testkit"         % "1.2-RC4"      % "test",
   "com.typesafe.akka"      %% "akka-testkit"          % "2.2.3"        % "test"
 )
@@ -35,3 +35,7 @@ scalacOptions ++= Seq(
 parallelExecution in Test := false
 
 javaOptions in run += "-javaagent:" + System.getProperty("user.home") + "/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.7.3.jar"
+
+fork in run := true
+
+connectInput in run := true
