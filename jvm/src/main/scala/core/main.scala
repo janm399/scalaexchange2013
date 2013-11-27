@@ -9,7 +9,7 @@ object Main extends App {
   import Commands._
   import akka.actor.ActorDSL._
 
-  implicit lazy val system = ActorSystem()
+  val system = ActorSystem()
   val sentiment = system.actorOf(Props(new SentimentAnalysisActor with CSVLoadedSentimentSets with AnsiConsoleSentimentOutput))
   val stream = system.actorOf(Props(new TweetStreamerActor(TweetStreamerActor.twitterUri, sentiment) with OAuthTwitterAuthorization))
 
