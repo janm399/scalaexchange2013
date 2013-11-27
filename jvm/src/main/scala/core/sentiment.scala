@@ -19,14 +19,14 @@ trait SentimentOutput {
 trait AnsiConsoleSentimentOutput extends SentimentOutput {
 
   object AnsiControls {
-    val Reset        = "\u001B[0m"
     val EraseDisplay = "\033[2J\033[;H"
     val EraseLine    = "\033[2K\033[;H"
-    val Bold         = "\u001B[1m"
-    def goto(x: Int, y: Int): String = "\u001B[%d;%df" format (y, x)
   }
 
   object AnsiColors {
+    val Reset  = "\u001B[0m"
+    val Bold   = "\u001B[1m"
+
     val Red    = "\u001B[31m"
     val Yellow = "\u001B[33m"
     val Cyan   = "\u001B[36m"
@@ -51,10 +51,10 @@ trait AnsiConsoleSentimentOutput extends SentimentOutput {
         case ((k, v), i) =>
           val color = AnsiColors.allColors(i % AnsiColors.allColors.size)
           print(color)
-          print(AnsiControls.Bold)
+          print(AnsiColors.Bold)
           print(k)
           print(" " * (categoryPadding - k.length))
-          print(AnsiControls.Reset)
+          print(AnsiColors.Reset)
           println(v)
       }
       println("-" * consoleWidth)
