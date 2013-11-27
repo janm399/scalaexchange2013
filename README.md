@@ -1,4 +1,4 @@
-mostlyfuns2013
-==============
+Scala Exchange 2013
+===================
 
-The Mostly Functional 2013 talk
+The Scala Exchange 2013 talk
