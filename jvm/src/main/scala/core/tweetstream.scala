@@ -4,7 +4,6 @@ import spray.httpx.unmarshalling.{MalformedContent, Unmarshaller, Deserialized}
 import spray.http._
 import spray.json._
 import spray.client.pipelining._
-import java.text.SimpleDateFormat
 import akka.actor.{OneForOneStrategy, SupervisorStrategy, ActorRef, Actor}
 import spray.http.HttpRequest
 import scala.Some
