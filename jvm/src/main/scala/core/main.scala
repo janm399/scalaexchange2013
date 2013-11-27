@@ -10,16 +10,15 @@ object Main extends App {
   import akka.actor.ActorDSL._
 
   implicit lazy val system = ActorSystem()
-  lazy val io = IO(Http)
   val sentiment = system.actorOf(Props(new SentimentAnalysisActor with CSVLoadedSentimentSets with AnsiConsoleSentimentOutput))
-  val stream = system.actorOf(Props(new TweetStreamerActor(io, TweetStreamerActor.twitterUri, sentiment) with OAuthTwitterAuthorization))
+  val stream = system.actorOf(Props(new TweetStreamerActor(TweetStreamerActor.twitterUri, sentiment) with OAuthTwitterAuthorization))
 
   @tailrec
   private def commandLoop(): Unit = {
     Console.readLine() match {
-      case QuitCommand          => return
-      case StreamCommand(query) => stream ! query
-      case _                    => println("WTF??!!")
+      case QuitCommand         => return
+      case TrackCommand(query) => stream ! query
+      case _                   => println("WTF??!!")
     }
 
     commandLoop()
@@ -32,11 +31,11 @@ object Main extends App {
 }
 
 /**
- * Various regexes for the ``Shell`` to use
+ * Various regexes for the shell to use
  */
 object Commands {
 
   val QuitCommand   = "quit"
-  val StreamCommand = "stream (.*)".r
+  val TrackCommand = "track (.*)".r
 
 }

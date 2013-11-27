@@ -12,6 +12,8 @@ import domain.{Place, User, Tweet}
 import scala.io.Source
 import akka.actor.SupervisorStrategy.Restart
 import scala.util.Try
+import spray.can.Http
+import akka.io.IO
 
 trait TwitterAuthorization {
   def authorize: HttpRequest => HttpRequest
@@ -73,7 +75,7 @@ object TweetStreamerActor {
   val twitterUri = Uri("https://stream.twitter.com/1.1/statuses/filter.json")
 }
 
-class TweetStreamerActor(io: ActorRef, uri: Uri, processor: ActorRef) extends Actor with TweetMarshaller {
+class TweetStreamerActor(uri: Uri, processor: ActorRef) extends Actor with TweetMarshaller {
   this: TwitterAuthorization =>
 
   override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
@@ -82,6 +84,7 @@ class TweetStreamerActor(io: ActorRef, uri: Uri, processor: ActorRef) extends Ac
 
   def receive: Receive = {
     case query: String =>
+      val io = IO(Http)(context.system)
       val post = HttpEntity(ContentType(MediaTypes.`application/x-www-form-urlencoded`), s"track=$query")
       val rq = HttpRequest(HttpMethods.POST, uri = uri, entity = post) ~> authorize
       sendTo(io).withResponsesReceivedBy(self)(rq)
