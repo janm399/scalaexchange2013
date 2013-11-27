@@ -39,7 +39,7 @@ trait AnsiConsoleSentimentOutput extends SentimentOutput {
     val allColors = List(White, Purple, Blue, Red, Yellow, Cyan, Green)
   }
 
-  val categoryPadding = 30
+  val categoryPadding = 50
   val consoleWidth = 80
 
   println(AnsiControls.EraseDisplay)
@@ -81,10 +81,12 @@ class SentimentAnalysisActor extends Actor {
   
   private val counts = collection.mutable.Map[Category, Int]()
   private val languages = collection.mutable.Map[Category, Int]()
+  private val places = collection.mutable.Map[Category, Int]()
 
   private def update(data: collection.mutable.Map[Category, Int])(category: Category, delta: Int): Unit = data.put(category, data.getOrElse(category, 0) + delta)
   val updateCounts = update(counts)_
   val updateLanguages = update(languages)_
+  val updatePlaces = update(places)_
 
   def receive: Receive = {
     case tweet: Tweet =>
@@ -99,7 +101,8 @@ class SentimentAnalysisActor extends Actor {
       }
       updateCounts("all", 1)
       updateLanguages(tweet.user.lang, 1)
+      updatePlaces(tweet.place.toString, 1)
     
-      outputCount(List(counts, languages))
+      outputCount(List(counts, places, languages))
   }
 }

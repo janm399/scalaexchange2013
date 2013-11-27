@@ -26,6 +26,7 @@ class TweetScannerActorSpec extends TestKit(ActorSystem()) with SpecificationLik
       tweet.text mustEqual "Aggressive Ponytail #freebandnames"
       tweet.user.lang mustEqual "en"
       tweet.user.id mustEqual "137238150"
+      tweet.place mustEqual None
       twitterApi.stop()
       success
     }

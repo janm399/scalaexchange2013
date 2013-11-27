@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat
 import akka.actor.{OneForOneStrategy, SupervisorStrategy, ActorRef, Actor}
 import spray.http.HttpRequest
 import scala.Some
-import domain.{User, Tweet}
+import domain.{Place, User, Tweet}
 import scala.io.Source
 import akka.actor.SupervisorStrategy.Restart
 import scala.util.Try
@@ -42,14 +42,23 @@ trait TweetMarshaller {
       }
     }
 
+    def mkPlace(place: JsValue): Option[Place] = place match {
+      case JsObject(fields) =>
+        (fields.get("country"), fields.get("name")) match {
+          case (Some(JsString(country)), Some(JsString(name))) => Some(Place(country, name))
+          case _                                               => None
+        }
+      case _ => None
+    }
+
     def apply(entity: HttpEntity): Deserialized[Tweet] = {
       Try {
         val json = JsonParser(entity.asString).asJsObject
 
-        (json.fields.get("id_str"), json.fields.get("text"), json.fields.get("created_at"), json.fields.get("user")) match {
-          case (Some(JsString(id)), Some(JsString(text)), Some(JsString(createdAt)), Some(user: JsObject)) =>
+        (json.fields.get("id_str"), json.fields.get("text"), json.fields.get("place"), json.fields.get("user")) match {
+          case (Some(JsString(id)), Some(JsString(text)), place, Some(user: JsObject)) =>
             mkUser(user) match {
-              case Right(user) => Right(Tweet(id, user, text, dateFormat.parse(createdAt)))
+              case Right(user) => Right(Tweet(id, user, text, place.flatMap(mkPlace)))
               case Left(msg)   => Left(msg)
             }
           case _ => Left(MalformedContent("bad tweet"))

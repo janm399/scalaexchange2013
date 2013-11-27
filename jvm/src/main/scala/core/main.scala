@@ -5,8 +5,6 @@ import scala.annotation.tailrec
 import spray.can.Http
 import akka.io.IO
 
-// run with -javaagent:$HOME/.m2/repository/org/aspectj/aspectjweaver/1.7.3/aspectjweaver-1.7.3.jar
-// in my case -javaagent:/Users/janmachacek/.m2/repository/org/aspectj/aspectjweaver/1.7.3/aspectjweaver-1.7.3.jar
 object Main extends App {
   import Commands._
   import akka.actor.ActorDSL._
