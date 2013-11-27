@@ -34,8 +34,6 @@ trait TweetMarshaller {
 
   implicit object TweetUnmarshaller extends Unmarshaller[Tweet] {
 
-    val dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss Z yyyy")
-
     def mkUser(user: JsObject): Deserialized[User] = {
       (user.fields("id_str"), user.fields("lang"), user.fields("followers_count")) match {
         case (JsString(id), JsString(lang), JsNumber(followers)) => Right(User(id, lang, followers.toInt))
