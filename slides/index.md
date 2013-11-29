@@ -179,6 +179,7 @@ trait TwitterAuthorization {
 
 And then have the OAuth implementation:
 
+```scala
 object OAuth {
   case class Consumer(key: String, secret: String)
   case class Token(value: String, secret: String)
@@ -247,6 +248,23 @@ Some trivial output:
 ```scala
 trait SimpleSentimentOutput extends SentimentOutput {
   def outputCount(values: List[Iterable[(Category, Int)]]): Unit = println(values)
+}
+```
+
+Sentiment sets loaded from files:
+
+```scala
+trait CSVLoadedSentimentSets extends SentimentSets {
+  lazy val positiveWords = loadWords("/positive_words.csv")
+  lazy val negativeWords = loadWords("/negative_words.csv")
+
+  private def loadWords(fileName: String): Set[String] = {
+    Source.
+      fromInputStream(getClass.getResourceAsStream(fileName)).
+      getLines().
+      map(line => line.split(",")(1)).
+      toSet
+  }
 }
 ```
 
